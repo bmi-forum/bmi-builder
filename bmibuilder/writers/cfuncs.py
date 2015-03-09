@@ -7,8 +7,7 @@ from cutils import (implement_this, code_block, if_else_blocks,
 
 
 def header(name):
-    return Template(code_block(
-        """
+    return Template(code_block("""
         #ifndef BMI_${upper_name}_H_INCLUDED
         #define BMI_${upper_name}_H_INCLUDED
 
@@ -16,7 +15,7 @@ def header(name):
         extern "C" {
         #endif
 
-        #include <bmi.h>
+        #include "bmi.h"
 
         BMI_Model * register_bmi_${name}(BMI_Model *model);
 
@@ -115,7 +114,7 @@ def get_var_itemsize(items):
 def get_var_grid(items):
     tmpl = Template(code_block("""
         static int
-        get_var_grid(void *self, const char *name, int *id)
+        get_var_grid(void *self, const char *name, int *grid)
         {
             ${contents}
             return BMI_SUCCESS;
@@ -290,7 +289,7 @@ def get_grid_rank(grids):
     exprs = []
     for (id, rank) in grids:
         exprs.append(('id == %d' % id, '*rank = %d;' % rank))
-    default="rank = -1; return BMI_FAILURE;"
+    default="*rank = -1; return BMI_FAILURE;"
 
     contents = if_else_blocks(exprs, default=default)
 
@@ -323,20 +322,20 @@ def get_grid_shape(grids):
     tmpl = Template(code_block("""
         static int
         get_grid_shape(void *self, int id, int *shape)
-        {
+        { ${note}
             ${contents}
             return BMI_SUCCESS;
-        }"""))
+        }""")).substitute(note=implement_this('set shape of structured grids'))
 
     if len(grids) == 0:
         return tmpl.substitute(contents="return BMI_FAILURE;")
 
     exprs = []
     for (id, rank) in grids:
-        statements = ['shape[%d] = ;' % i for i in xrange(rank)]
-        exprs.append(('id == %d' % id, ' '.join(statements)))
-    statements = ['shape[%d] = -1;' % i for i in xrange(rank)]
-    default="%s; return BMI_FAILURE;" % ' '.join(statements)
+        if rank > 0:
+            statements = ['shape[%d] = -1;' % i for i in xrange(rank)]
+            exprs.append(('id == %d' % id, ' '.join(statements)))
+    default="return BMI_FAILURE;"
 
     contents = if_else_blocks(exprs, default=default)
 
@@ -347,20 +346,21 @@ def get_grid_spacing(grids):
     tmpl = Template(code_block("""
         static int
         get_grid_spacing(void *self, int id, double *spacing)
-        {
+        { ${note}
             ${contents}
             return BMI_SUCCESS;
-        }"""))
+        }""")).substitute(
+            note=implement_this('set spacing of uniform rectilinear grids'))
 
     if len(grids) == 0:
         return tmpl.substitute(contents="return BMI_FAILURE;")
 
     exprs = []
     for (id, rank) in grids:
-        statements = ['spacing[%d] = ;' % i for i in xrange(rank)]
-        exprs.append(('id == %d' % id, ' '.join(statements)))
-    statements = ['spacing[%d] = -1.;' % i for i in xrange(rank)]
-    default="%s; return BMI_FAILURE;" % ' '.join(statements)
+        if rank > 0:
+            statements = ['spacing[%d] = -1.;' % i for i in xrange(rank)]
+            exprs.append(('id == %d' % id, ' '.join(statements)))
+    default="return BMI_FAILURE;"
 
     contents = if_else_blocks(exprs, default=default)
 
@@ -370,21 +370,22 @@ def get_grid_spacing(grids):
 def get_grid_origin(grids):
     tmpl = Template(code_block("""
         static int
-        get_grid_origin(void *self, int id, double *spacing)
-        {
+        get_grid_origin(void *self, int id, double *origin)
+        { ${note}
             ${contents}
             return BMI_SUCCESS;
-        }"""))
+        }""")).substitute(
+            note=implement_this('set origin of uniform rectilinear grids'))
 
     if len(grids) == 0:
         return tmpl.substitute(contents="return BMI_FAILURE;")
 
     exprs = []
     for (id, rank) in grids:
-        statements = ['origin[%d] = ;' % i for i in xrange(rank)]
-        exprs.append(('id == %d' % id, ' '.join(statements)))
-    statements = ['origin[%d] = -1.;' % i for i in xrange(rank)]
-    default="%s; return BMI_FAILURE;" % ' '.join(statements)
+        if rank > 0:
+            statements = ['origin[%d] = -1.;' % i for i in xrange(rank)]
+            exprs.append(('id == %d' % id, ' '.join(statements)))
+    default="return BMI_FAILURE;"
 
     contents = if_else_blocks(exprs, default=default)
 
@@ -407,7 +408,7 @@ def get_value():
 
             memcpy(dest, src, nbytes);
 
-            return BMI_SUCCESS
+            return BMI_SUCCESS;
         }""")
 
 
@@ -497,7 +498,7 @@ def set_value_at_indices():
             int itemsize = 0;
 
             if (get_value_ptr (self, name, &to) == BMI_FAILURE)
-                return status;
+                return BMI_FAILURE;
 
             if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
                 return BMI_FAILURE;
@@ -537,7 +538,7 @@ def initialize():
 def update_frac():
     return code_block("""
         static int
-        update_frac(void * self, double *f)
+        update_frac(void * self, double f)
         { %s
             return BMI_FAILURE;
         }""") % implement_this('Update for a fraction of a time step')
@@ -546,7 +547,7 @@ def update_frac():
 def update():
     return code_block("""
         static int
-        update(void * self, double *f)
+        update(void * self)
         {
             return update_frac(self, 1.);
         }""")
@@ -555,7 +556,7 @@ def update():
 def update_until():
     return code_block("""
         static int
-        update_until(void * self, double *f)
+        update_until(void * self, double then)
         {
             double dt;
             double now;
@@ -568,7 +569,7 @@ def update_until():
 
             {
                 int n;
-                const double n_steps = (t - now) / dt;
+                const double n_steps = (then - now) / dt;
                 for (n=0; n<(int)n_steps; n++) {
                     if (update(self) == BMI_FAILURE)
                         return BMI_FAILURE;
@@ -611,10 +612,9 @@ def register_bmi(name):
             model->get_input_var_names = get_input_var_names;
             model->get_output_var_names = get_output_var_names;
 
+            model->get_var_grid = get_var_grid;
             model->get_var_type = get_var_type;
             model->get_var_units = get_var_units;
-            model->get_var_rank = get_var_rank;
-            model->get_var_size = get_var_size;
             model->get_var_nbytes = get_var_nbytes;
             model->get_current_time = get_current_time;
             model->get_start_time = get_start_time;
@@ -630,6 +630,8 @@ def register_bmi(name):
             model->set_value_ptr = NULL;
             model->set_value_at_indices = set_value_at_indices;
 
+            model->get_grid_rank = get_grid_rank;
+            model->get_grid_size = get_grid_size;
             model->get_grid_type = get_grid_type;
             model->get_grid_shape = get_grid_shape;
             model->get_grid_spacing = get_grid_spacing;
