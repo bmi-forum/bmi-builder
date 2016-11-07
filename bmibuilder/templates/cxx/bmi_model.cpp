@@ -67,9 +67,8 @@ int bmi::Model::GetVarType (const char * var_name, char * vtype) {
     strncpy(vtype, "{{ var.type }}", BMI_MAX_UNITS_NAME);
   {% endfor %}
   } else {
-    throw bmi:BAD_VAR_NAME;
+    throw bmi::BAD_VAR_NAME;
   }
-  return BMI_SUCCESS;
 }
 
 void bmi::Model::GetVarUnits (const char * var_name,
@@ -83,7 +82,7 @@ void bmi::Model::GetVarUnits (const char * var_name,
     strncpy(units, "{{ var.units }}", BMI_MAX_UNITS_NAME);
   {% endfor %}
   } else {
-    throw bmi:BAD_VAR_NAME;
+    throw bmi::BAD_VAR_NAME;
   }
 }
 
@@ -99,7 +98,7 @@ int bmi::Model::GetVarGrid (const char * var_name) {
     grid_id = {{ var.grid }};
   {% endfor %}
   } else {
-    throw bmi:BAD_VAR_NAME;
+    throw bmi::BAD_VAR_NAME;
   }
   return grid_id;
 }
@@ -116,7 +115,7 @@ int bmi::Model::GetGridRank (const char * var_name) {
     rank = {{ grid.rank }};
   {% endfor %}
   } else {
-    throw bmi:BAD_VAR_NAME;
+    throw bmi::BAD_VAR_NAME;
   }
   return rank;
 }
@@ -210,54 +209,14 @@ void bmi::Model::SetValue (const char * var_name, double *vals) {
   }
 }
 
-int bmi::Model::GetVarPointCount (const char *var_name) {
-  if (VERBOSE)
-    std::cout << "INFO: getting point count" << var_name << std::endl;
-
-  CHECK_OR_THROW(HasOutputVar (var_name) || HasInputVar (var_name), bmi::BAD_VAR_NAME);
-
-  if (VERBOSE)
-    std::cout << "INFO: my point count is" << mesh->getNodeList ()->getSize () << std::endl;
-
-  return mesh->getNodeList ()->getSize ();
-}
-
-int bmi::Model::GetVarCellCount (const char *var_name) {
-  CHECK_OR_THROW(HasOutputVar (var_name) || HasInputVar (var_name), bmi::BAD_VAR_NAME);
-
-  if (VERBOSE)
-    std::cout << "INFO: my cell count is" << mesh->getTriList ()->getSize () << std::endl;
-
-  return mesh->getTriList()->getSize();
-  /*
-  if (strncmp (var_name, "Cell", 4) == 0)
-    return mesh->getTriList()->getSize();
-  else
-    return mesh->getNodeList ()->getSize ();
-  */
-}
-
-int bmi::Model::GetVarVertexCount (const char *var_name) {
-  CHECK_OR_THROW(HasOutputVar (var_name) || HasInputVar (var_name), bmi::BAD_VAR_NAME);
-
-  return mesh->getTriList()->getSize()*3;
-  /*
-  if (strncmp (var_name, "Cell", 4) == 0)
-    return mesh->getTriList()->getSize()*3;
-  else
-    return mesh->getTriList()->getSize();
-  */
-}
-
 void bmi::Model::GetGridX (const int grid_id, double * const x) {
   {% for grid in grids %}
     {% if loop.first %}
-  if (grid_id =={{ grid.id }}) {
+  if (grid_id == {{ grid.id }}) {
     {% else %}
   } else if (grid_id == {{ grid.id }}) {
     {% endif %}
     // Implement this: x for this grid.
-    {% endfor %}
   {% endfor %}
   } else {
     throw bmi:FAILURE;
@@ -267,12 +226,11 @@ void bmi::Model::GetGridX (const int grid_id, double * const x) {
 void bmi::Model::GetGridY (const int grid_id, double * const y) {
   {% for grid in grids %}
     {% if loop.first %}
-  if (grid_id =={{ grid.id }}) {
+  if (grid_id == {{ grid.id }}) {
     {% else %}
   } else if (grid_id == {{ grid.id }}) {
     {% endif %}
     // Implement this: y for this grid.
-    {% endfor %}
   {% endfor %}
   } else {
     throw bmi:FAILURE;
@@ -282,12 +240,11 @@ void bmi::Model::GetGridY (const int grid_id, double * const y) {
 void bmi::Model::GetGridConnectivity (const int grid_id, int * connectivity) {
   {% for grid in grids %}
     {% if loop.first %}
-  if (grid_id =={{ grid.id }}) {
+  if (grid_id == {{ grid.id }}) {
     {% else %}
   } else if (grid_id == {{ grid.id }}) {
     {% endif %}
     // Implement this: connectivity for this grid.
-    {% endfor %}
   {% endfor %}
   } else {
     throw bmi:FAILURE;
@@ -302,7 +259,6 @@ void bmi::Model::GetGridOffset (const int grid_id, int * const offset) {
   } else if (grid_id == {{ grid.id }}) {
     {% endif %}
     // Implement this: connectivity for this grid.
-    {% endfor %}
   {% endfor %}
   } else {
     throw bmi:FAILURE;
