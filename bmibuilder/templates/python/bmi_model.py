@@ -17,7 +17,7 @@ Grid = namedtuple('Grid', ['id', 'rank', 'type',
 
 class Bmi{{ name|title }}(Bmi):
 
-    _name = {{ long_name }}
+    _name = '{{ long_name }}'
     _input_var_names = (
         {% for var in input_vars %}
         '{{ var.name }}',
