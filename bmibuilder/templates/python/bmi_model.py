@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """Basic Model Interface implementation."""
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import types
 
 import numpy as np
