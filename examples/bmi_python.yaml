@@ -1,0 +1,42 @@
+name: WindWaves
+long_name: WindWaves
+language: python
+grids:
+  - id: 0
+    type: unstructured
+    rank: 0
+time:
+  units: s
+  start: 1.0e0
+  end: 1.0e6
+exchange_items:
+  - name: land_surface_10m-above_air_flow__speed
+    grid: 0
+    type: float
+    units: m s-1
+    intent: in
+  - name: sea_surface_air_flow__fetch_length
+    grid: 0
+    type: float
+    units: m
+    intent: in
+  - name: sea_water__depth
+    grid: 0
+    type: float
+    units: m
+    intent: in
+  - name: sea_surface_water_wave__height
+    grid: 0
+    type: float
+    units: m
+    intent: out
+  - name: sea_surface_water_wave__period
+    grid: 0
+    type: float
+    units: s
+    intent: out
+  - name: sea_surface_water_wave__spectrum
+    grid: 0
+    type: float
+    units: s-1
+    intent: out

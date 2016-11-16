@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """Basic Model Interface implementation."""
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import types
 
 import numpy as np
 
-from bmi import Bmi
+from basic_modeling_interface import Bmi
 
 {{ includes }}
 
@@ -17,7 +17,7 @@ Grid = namedtuple('Grid', ['id', 'rank', 'type',
 
 class Bmi{{ name|title }}(Bmi):
 
-    _name = {{ long_name }}
+    _name = '{{ long_name }}'
     _input_var_names = (
         {% for var in input_vars %}
         '{{ var.name }}',
